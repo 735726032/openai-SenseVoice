@@ -1,0 +1,17 @@
+services:
+  openai-SenseVoice:
+    image: openai-sensevoice:latest
+    build:
+      context: .
+    container_name: openai-sensevoice
+    restart: unless-stopped
+    ports:
+      - '${PORT:-8000}:8000'
+    env_file:
+      - .env
+    volumes:
+      # Mount local models to container
+      # when downloading the model using huggingface
+#      - /root/.cache/huggingface/hub/models/iic/:/root/.cache/huggingface/hub/models/iic/
+      # when downloading the model using modelscope
+      - /root/.cache/modelscope/hub/models/iic/:/root/.cache/modelscope/hub/models/iic/

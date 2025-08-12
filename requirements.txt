@@ -1,0 +1,14 @@
+torch<=2.3
+torchaudio~=2.3.0
+modelscope
+huggingface
+huggingface_hub
+funasr>=1.1.3
+numpy<=1.26.4
+gradio~=5.27.0
+fastapi>=0.111.1
+fastapi[standard]
+librosa~=0.11.0
+PyYAML~=6.0.2
+jieba~=0.42.1
+uvicorn~=0.34.2
