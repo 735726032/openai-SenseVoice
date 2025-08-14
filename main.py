@@ -41,6 +41,10 @@ app.add_middleware(
 # Helper functions
 from utils import authenticate_user
 from utils import process_file, validate_parameters
+from settings import get_settings
+
+settings = get_settings()
+
 
 # Routes
 @app.get("/", response_class=RedirectResponse)
@@ -115,6 +119,7 @@ async def transcribe_audio(credentials: HTTPAuthorizationCredentials = Depends(s
     user = authenticate_user(credentials)
     validate_parameters(file, language, model, response_format)
 
+    cache_invoke = settings.FORCE_CACHE_INVOKE or cache_invoke
     # 1) cache_invoke=True 且模型已缓存 → 跳过创建
     if cache_invoke and (m is not None):
         pass
@@ -139,7 +144,7 @@ async def transcribe_audio(credentials: HTTPAuthorizationCredentials = Depends(s
         for f in file:
             future = executor.submit(asyncio.run, process_file(f, m, language))
             futures.append(future)
-    
+
         transcriptions = {}
         for i, future in enumerate(concurrent.futures.as_completed(futures), start=1):
             try:
@@ -157,7 +162,7 @@ async def transcribe_audio(credentials: HTTPAuthorizationCredentials = Depends(s
             except Exception as e:
                 logger.error(f"An error occurred during transcription: {str(e)}")
                 raise HTTPException(status_code=500, detail=str(e))
-    
+
         logger.info(f"Transcription completed for {len(file)} file(s).")
         return JSONResponse(content=transcriptions)
 
@@ -187,7 +192,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     details = exc.errors()[0]['msg']
-    loc = exc.errors()[0]['loc']  
+    loc = exc.errors()[0]['loc']
     return JSONResponse(
         status_code=422,
         content={

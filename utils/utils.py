@@ -6,14 +6,16 @@ from fastapi.security import HTTPAuthorizationCredentials
 from funasr import AutoModel
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
 
+from settings import get_settings
 from constants import security, SUPPORTED_EXTENSIONS, SUPPORTED_LANGUAGES, SUPPORTED_MODELS, SUPPORTED_RESPONSE_FORMATS
 from logging_config import get_logger
 
 logger = get_logger()
+settings = get_settings()
 
 
 def authenticate_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    correct_api_key = os.getenv("API_KEY", "dummy_api_key")  # replace with your dummy API key
+    correct_api_key = settings.API_KEY or os.getenv("API_KEY", "dummy_api_key")  # replace with your dummy API key
     if credentials.scheme != "Bearer" or credentials.credentials != correct_api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
