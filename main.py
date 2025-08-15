@@ -1,11 +1,10 @@
-
 import concurrent.futures
 import asyncio
 import os
 
 import torch
 
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 from funasr import AutoModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form, Depends, status
@@ -24,6 +23,7 @@ from responses import VALIDATION_ERROR_RESPONSE, INTERNAL_SERVER_ERROR_RESPONSE
 
 # Logging configuration
 from logging_config import get_logger
+
 logger = get_logger()
 
 app = FastAPI()
@@ -50,6 +50,7 @@ settings = get_settings()
 @app.get("/", response_class=RedirectResponse)
 async def redirect_to_docs():
     return "/docs"
+
 
 @app.get('/info')
 def home():
@@ -111,15 +112,15 @@ m: AutoModel | None = None
 async def transcribe_audio(credentials: HTTPAuthorizationCredentials = Depends(security),
                            file: List[UploadFile] = File(...),
                            model: str = Form("iic/SenseVoiceSmall"),
+                           vad_model: str = Form("fsmn-vad"),
                            language: str = Form("auto"),
-                           response_format: str = Form("text"),
-                           cache_invoke=Form(False)):
+                           response_format: str = Form("text")):
     global m
 
     user = authenticate_user(credentials)
     validate_parameters(file, language, model, response_format)
 
-    cache_invoke = settings.FORCE_CACHE_INVOKE or cache_invoke
+    cache_invoke = settings.FORCE_CACHE_INVOKE
     # 1) cache_invoke=True 且模型已缓存 → 跳过创建
     if cache_invoke and (m is not None):
         pass
@@ -134,7 +135,7 @@ async def transcribe_audio(credentials: HTTPAuthorizationCredentials = Depends(s
             disable_update=True,
             trust_remote_code=True,
             remote_code="./model.py",
-            vad_model="fsmn-vad",
+            vad_model=vad_model,
             vad_kwargs={"max_single_segment_time": 30000},
             device=device,
         )
@@ -166,12 +167,15 @@ async def transcribe_audio(credentials: HTTPAuthorizationCredentials = Depends(s
         logger.info(f"Transcription completed for {len(file)} file(s).")
         return JSONResponse(content=transcriptions)
 
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content=exc.detail,
     )
+
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     status_code = 500
@@ -189,6 +193,8 @@ async def generic_exception_handler(request: Request, exc: Exception):
             }
         },
     )
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     details = exc.errors()[0]['msg']
@@ -205,6 +211,8 @@ async def validation_exception_handler(request, exc):
         },
     )
 
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+    uvicorn.run(app, host="0.0.0.0", port=8001)

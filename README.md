@@ -27,9 +27,18 @@ The overall framework remains consistent with [FastWhisperAPI](https://github.co
     pip install -r requirements.txt
     ```
 
-5. Preload the base model (Download it from huggingface by default, and can be switched by modifying the 'hub' configuration in the code.)
+5. Preload the base model (Download it from huggingface by default, and can be switched by modifying the 'hub' configuration in the code.).By default, the model directories downloaded using modelscope are in `~/.cache/modelscope/hub/models`
     ```bash
     python download_model.py
+    ```
+
+6. Modify .env
+    ```bash
+   PORT=8000
+   API_KEY=dummy_api_key
+   
+   # When the option is 'True', the model is not recreated based on the entry parameter, and the last created model is reused. Default is 'False'.
+   FORCE_CACHE_INVOKE=True
     ```
 
 ## Usage
@@ -43,7 +52,7 @@ fastapi run main.py
 If you want to specify a different port, use the --port option followed by the desired port number:
 
 ```bash
-fastapi run main.py --port 5000
+fastapi run main.py --port 8000
 ```
 
 The API automatically detects the availability of a GPU and configures the device accordingly, either on CPU or CUDA.
@@ -72,26 +81,26 @@ Use the following commands to build and run the container:
 ## Parameters
 
 - `file`: A list of audio files to transcribe. This is a required parameter.
-- `model`: The size of the model to use for transcription. This is an optional parameter. The options are 'iic/SenseVoiceSmall'. Default is 'iic/SenseVoiceSmall'.
+- `model`: The size of the model to use for transcription. This is an optional parameter. The options are 'iic/SenseVoiceSmall'. Default is 'iic/SenseVoiceSmall'.You can write directly to the file path, and the automatic download model operation will not be triggered. e.g. `/root/.cache/modelscope/hub/models/iic/SenseVoiceSmall/`
+- `vad_model`: This is an optional parameter. The options are 'fsmn-vad'. Default is 'fsmn-vad'.You can write directly to the file path, and the automatic download model operation will not be triggered.`/root/.cache/modelscope/hub/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch/`
 - `language`: This parameter specifies the language of the audio files. It is optional, with accepted values being lowercase ISO-639-1 format (e.g., 'en' for English). If not provided, the system will automatically detect the language. The options are 'auto, 'zh, 'en', 'yue', 'ja', 'ko, 'nospeech. Default is 'auto'.
 - `response_format`: The format of the response. This is an optional parameter. The options are 'text', 'verbose_json'. Default is 'text'.
-- `cache_invoke`: When the option is 'True', the model is not recreated based on the entry parameter, and the last created model is reused. Default is 'False'.
 
 ### Example curl request
 
-You can use the following `curl` command to send a POST request to the `/v1/transcriptions` endpoint:
+You can use the following `curl` command to send a POST request to the `/v1/audio/transcriptions` endpoint:
 
 ```bash
-curl -X POST "http://localhost:8000/v1/transcriptions" \
+curl -X POST "http://localhost:8000/v1/audio/transcriptions" \
 -H  "accept: application/json" \
 -H  "Content-Type: multipart/form-data" \
 -H  "Authorization: Bearer dummy_api_key" \
 -F "file=@audio1.wav;type=audio/wav" \
 -F "file=@audio2.wav;type=audio/wav" \
 -F "model=iic/SenseVoiceSmall" \
+-F "vad_model=fsmn-vad" \
 -F "language=auto" \
--F "response_format=text" \
--F "cache_invoke=False"
+-F "response_format=text" 
 ```
 ## Endpoints
 

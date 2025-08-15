@@ -105,16 +105,16 @@ def validate_parameters(files, language, model_size, response_format):
                 "code": 400
             }
         })
-    if model_size not in SUPPORTED_MODELS:
-        logger.warning(f"Invalid model size: {model_size}")
-        raise HTTPException(status_code=400, detail={
-            "error": {
-                "message": f"Invalid model size. Supported models are: {', '.join(SUPPORTED_MODELS)}",
-                "type": "invalid_request_error",
-                "param": "model",
-                "code": 400
-            }
-        })
+    # if model_size not in SUPPORTED_MODELS:
+    #     logger.warning(f"Invalid model size: {model_size}")
+    #     raise HTTPException(status_code=400, detail={
+    #         "error": {
+    #             "message": f"Invalid model size. Supported models are: {', '.join(SUPPORTED_MODELS)}",
+    #             "type": "invalid_request_error",
+    #             "param": "model",
+    #             "code": 400
+    #         }
+    #     })
     if response_format not in SUPPORTED_RESPONSE_FORMATS:
         logger.warning(f"Invalid response_format value: {response_format}")
         raise HTTPException(status_code=400, detail={
